@@ -15,7 +15,7 @@ export enum BeltColor {
 export interface User {
   name: string;
   belt: BeltColor;
-  points: number;
+  points?: number;
   password?: string;
 }
 

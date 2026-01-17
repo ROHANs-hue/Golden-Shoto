@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, BeltColor, Question, QuizResult } from './types';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import QuizEngine from './components/QuizEngine';
-import Results from './components/Results';
-import AdminPortal from './components/AdminPortal';
+import { User, Question, QuizResult } from './types.ts';
+import Login from './components/Login.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import QuizEngine from './components/QuizEngine.tsx';
+import Results from './components/Results.tsx';
+import AdminPortal from './components/AdminPortal.tsx';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -16,8 +16,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const savedUser = localStorage.getItem('dojo_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setCurrentScreen('dash');
+      try {
+        setUser(JSON.parse(savedUser));
+        setCurrentScreen('dash');
+      } catch (e) {
+        localStorage.removeItem('dojo_user');
+      }
     }
   }, []);
 
@@ -59,7 +63,6 @@ const App: React.FC = () => {
       }))
     };
 
-    // Simulate Cloud Persistence
     const cloudData = JSON.parse(localStorage.getItem('dojo_cloud_data') || '[]');
     localStorage.setItem('dojo_cloud_data', JSON.stringify([newResult, ...cloudData]));
     
@@ -67,12 +70,8 @@ const App: React.FC = () => {
     setCurrentScreen('results');
   };
 
-  const backToDash = () => {
-    setCurrentScreen('dash');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 animate-fade-in">
       {currentScreen === 'auth' && (
         <Login 
           onLogin={handleLogin} 
@@ -97,14 +96,14 @@ const App: React.FC = () => {
             <QuizEngine 
               questions={questions} 
               onFinish={saveToCloud} 
-              onCancel={backToDash}
+              onCancel={() => setCurrentScreen('dash')}
             />
           )}
           {currentScreen === 'results' && (
             <Results 
               questions={questions} 
               answers={userAnswers} 
-              onBack={backToDash}
+              onBack={() => setCurrentScreen('dash')}
               user={user}
             />
           )}

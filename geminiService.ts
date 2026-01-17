@@ -1,19 +1,19 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { BeltColor, Question } from "./types";
+import { BeltColor, Question } from "./types.ts";
 
 export const generateQuiz = async (belt: BeltColor): Promise<Question[]> => {
-  // Always use a new instance to ensure the most up-to-date API key is used
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   
-  const prompt = `Generate 5 high-quality multiple choice questions for a Karate student at the ${belt} belt level.
-  For every text field, provide both English and a natural Bengali translation.
+  const prompt = `Act as a Sensei for Golden Shoto Karate Academy. 
+  Generate 5 high-quality multiple choice questions for a student at the ${belt} belt level.
   Focus on:
   - Technical Japanese terminology (e.g., Kihon, Kata, Kumite terms).
   - Proper stances (Dachi) and strikes (Uchi/Tsuki).
   - Dojo etiquette (Reiho) and philosophy (Dojo Kun).
   
-  Tailor difficulty specifically for ${belt} belt rank. 
+  For every text field, provide both English and a natural Bengali translation.
+  Difficulty level: Tailored specifically for ${belt} belt rank.
   Output MUST be in the specified JSON format.`;
 
   try {
@@ -32,16 +32,16 @@ export const generateQuiz = async (belt: BeltColor): Promise<Question[]> => {
               options: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: "Array of 4 options in English",
+                description: "4 options in English"
               },
               optionsBengali: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: "Array of 4 options in Bengali",
+                description: "4 options in Bengali"
               },
               correctAnswer: { 
-                type: Type.INTEGER, 
-                description: "Index of the correct answer (0-3)" 
+                type: Type.INTEGER,
+                description: "Index of the correct answer (0-3)"
               },
               explanation: { type: Type.STRING },
               explanationBengali: { type: Type.STRING }
@@ -53,9 +53,10 @@ export const generateQuiz = async (belt: BeltColor): Promise<Question[]> => {
     });
 
     const jsonStr = response.text.trim();
+    if (!jsonStr) throw new Error("Empty response from Sensei");
     return JSON.parse(jsonStr) as Question[];
   } catch (error) {
-    console.error("Error generating quiz:", error);
-    throw new Error("Failed to meditate on the questions. Please try again.");
+    console.error("Dojo API Error:", error);
+    throw new Error("The Sensei is currently meditating. Please try again shortly.");
   }
 };
