@@ -14,7 +14,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBack }) => {
   
   // Settings State
   const [settings, setSettings] = useState<DojoSettings>({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     systemInstruction: '',
     temperature: 0.7,
     topP: 0.95,
@@ -33,7 +33,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBack }) => {
         setSettings(JSON.parse(savedSettings));
       } else {
         setSettings({
-          model: 'gemini-3-pro-preview',
+          model: 'gemini-3-flash-preview',
           systemInstruction: 'Act as a Karate Sensei for Golden Shoto Academy.\nGenerate exactly 5 multiple choice questions for a student at the {BELT} belt rank.\nTest knowledge of technical stances (Dachi), strikes (Uchi/Tsuki), terminology, and Dojo etiquette.\nEvery text field must include an English version and a Bengali translation.\nReturn exactly 5 questions in a JSON array.',
           temperature: 0.7,
           topP: 0.95,
@@ -180,8 +180,8 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ onBack }) => {
                   onChange={(e) => setSettings({...settings, model: e.target.value})}
                   className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none font-bold text-slate-800 focus:border-yellow-600 transition-colors"
                 >
-                  <option value="gemini-3-pro-preview">Gemini 3 Pro (Recommended)</option>
-                  <option value="gemini-3-flash-preview">Gemini 3 Flash (High Speed)</option>
+                  <option value="gemini-3-flash-preview">Gemini 3 Flash (High Speed - Recommended)</option>
+                  <option value="gemini-3-pro-preview">Gemini 3 Pro (High Precision)</option>
                   <option value="gemini-2.5-flash-lite-latest">Gemini 2.5 Flash Lite</option>
                 </select>
               </div>

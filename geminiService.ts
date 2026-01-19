@@ -8,18 +8,31 @@ Test knowledge of technical stances (Dachi), strikes (Uchi/Tsuki), terminology, 
 Every text field must include an English version and a Bengali translation.
 Return exactly 5 questions in a JSON array.`;
 
+export const testApiKey = async (key: string): Promise<boolean> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: key });
+    await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: 'hi',
+      config: { maxOutputTokens: 5 }
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 export const generateQuiz = async (belt: BeltColor, userApiKey?: string): Promise<Question[]> => {
-  // Prioritize the student's personal API key, then fallback to environment variable
   const apiKey = userApiKey || process.env.API_KEY;
+  const isPersonal = !!userApiKey;
   
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
-    throw new Error("Dojo API Error: No Security Key found. Please add your own Gemini API Key in 'Sensei Settings' or contact your Sensei.");
+    throw new Error("Dojo API Error: No Security Key found. Please add your own Gemini API Key in 'Configure AI Key'.");
   }
 
-  // Retrieve custom settings or use defaults
   const savedSettings = localStorage.getItem('dojo_settings');
   const settings: DojoSettings = savedSettings ? JSON.parse(savedSettings) : {
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     systemInstruction: DEFAULT_INSTRUCTION,
     temperature: 0.7,
     topP: 0.95,
@@ -35,7 +48,7 @@ export const generateQuiz = async (belt: BeltColor, userApiKey?: string): Promis
       temperature: settings.temperature || 0.7,
       topP: settings.topP,
       topK: settings.topK,
-      maxOutputTokens: settings.maxOutputTokens,
+      maxOutputTokens: settings.maxOutputTokens || 2048,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.ARRAY,
@@ -44,22 +57,9 @@ export const generateQuiz = async (belt: BeltColor, userApiKey?: string): Promis
           properties: {
             question: { type: Type.STRING },
             questionBengali: { type: Type.STRING },
-            options: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              minItems: 4,
-              maxItems: 4
-            },
-            optionsBengali: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              minItems: 4,
-              maxItems: 4
-            },
-            correctAnswer: { 
-              type: Type.INTEGER,
-              description: "Index 0-3"
-            },
+            options: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 4, maxItems: 4 },
+            optionsBengali: { type: Type.ARRAY, items: { type: Type.STRING }, minItems: 4, maxItems: 4 },
+            correctAnswer: { type: Type.INTEGER },
             explanation: { type: Type.STRING },
             explanationBengali: { type: Type.STRING }
           },
@@ -73,20 +73,27 @@ export const generateQuiz = async (belt: BeltColor, userApiKey?: string): Promis
     }
 
     const response = await ai.models.generateContent({
-      model: settings.model || 'gemini-3-pro-preview',
+      model: settings.model || 'gemini-3-flash-preview',
       contents: finalPrompt,
       config: config
     });
 
     const resultText = response.text;
-    if (!resultText) throw new Error("Sensei is silent (Empty API response)");
+    if (!resultText) throw new Error("Sensei is silent (Empty response)");
     
     return JSON.parse(resultText) as Question[];
   } catch (error: any) {
     console.error("Master Sensei API Error:", error);
-    if (error.message?.includes("429")) {
-      throw new Error("Free Tier Rest: Please wait 60 seconds for the next session or use your own API Key.");
+    const msg = error.message || "";
+    
+    if (msg.includes("429")) {
+      throw new Error(`Rate Limit Hit: The ${isPersonal ? 'Personal' : 'Academy'} API key is exhausted. Please wait 60 seconds.`);
+    } else if (msg.includes("401") || msg.includes("API_KEY_INVALID")) {
+      throw new Error("Invalid API Key: The key provided is incorrect. Please check your AI Configuration.");
+    } else if (msg.includes("403")) {
+      throw new Error("Permission Denied: This API key does not have access to Gemini models.");
     }
-    throw new Error(error.message || "The Dojo connection was interrupted. Please verify your API Key.");
+    
+    throw new Error(msg || "The Dojo connection was interrupted. Please verify your internet and API settings.");
   }
 };

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,24 +24,21 @@
       @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
       .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
     </style>
-    <script>
-      // Shim process.env for environments that don't provide it
-      window.process = window.process || { env: {} };
-    </script>
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@19.2.3/client",
-    "@google/genai": "https://esm.sh/@google/genai@1.37.0",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
-  </head>
+</head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
