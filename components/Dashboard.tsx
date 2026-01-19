@@ -1,28 +1,38 @@
 
 import React, { useState } from 'react';
-import { User, BeltColor, Question } from '../types';
-import { generateQuiz } from '../geminiService';
+import { User, BeltColor, Question } from '../types.ts';
+import { generateQuiz } from '../geminiService.ts';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
   onStartQuiz: (questions: Question[]) => void;
+  onUpdateUser: (user: User) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartQuiz }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartQuiz, onUpdateUser }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showApiSettings, setShowApiSettings] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState(user.customApiKey || '');
 
   const handleStart = async () => {
     setLoading(true);
     setError('');
     try {
-      const q = await generateQuiz(user.belt);
+      const q = await generateQuiz(user.belt, user.customApiKey);
       onStartQuiz(q);
-    } catch (err) {
-      setError('The Sensei is busy. Please try again in a moment.');
+    } catch (err: any) {
+      console.error("Quiz Start Error:", err);
+      setError(err.message || 'The Sensei is busy. Check your API key or connection.');
       setLoading(false);
     }
+  };
+
+  const handleSaveApiKey = () => {
+    const updatedUser = { ...user, customApiKey: tempApiKey };
+    onUpdateUser(updatedUser);
+    setShowApiSettings(false);
   };
 
   const beltColors: Record<BeltColor, string> = {
@@ -51,10 +61,48 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartQuiz }) =>
           </div>
         </div>
         <div className="flex items-center gap-6">
-           <span className="hidden md:block text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase tracking-widest">● Academy Live</span>
+           <button 
+             onClick={() => setShowApiSettings(!showApiSettings)}
+             className={`text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest transition-all ${user.customApiKey ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'}`}
+           >
+             {user.customApiKey ? '● Personal Key Active' : 'Configure AI Key'}
+           </button>
            <button onClick={onLogout} className="text-slate-400 hover:text-red-600 text-xs font-bold transition-colors uppercase">Logout</button>
         </div>
       </nav>
+
+      {showApiSettings && (
+        <div className="bg-yellow-50 border-2 border-yellow-200 p-8 rounded-3xl animate-in slide-in-from-top-4 duration-300">
+          <h3 className="text-sm font-black text-yellow-800 uppercase tracking-widest mb-4">Personal Sensei Configuration</h3>
+          <p className="text-xs text-yellow-700 mb-6 leading-relaxed">
+            To use your own Gemini credits, enter your API Key below. This key is saved only in your browser's local storage.
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="ml-1 underline font-bold">Get your free key here</a>.
+          </p>
+          <div className="flex flex-col md:flex-row gap-4">
+            <input 
+              type="password"
+              value={tempApiKey}
+              onChange={(e) => setTempApiKey(e.target.value)}
+              placeholder="Paste your Gemini API Key here"
+              className="flex-1 px-6 py-4 bg-white border-2 border-yellow-100 rounded-2xl focus:border-yellow-600 outline-none font-mono text-sm"
+            />
+            <button 
+              onClick={handleSaveApiKey}
+              className="px-8 py-4 bg-yellow-600 text-white font-black rounded-2xl hover:bg-yellow-700 transition-all uppercase tracking-widest text-xs"
+            >
+              Save Personal Key
+            </button>
+          </div>
+          {user.customApiKey && (
+            <button 
+              onClick={() => { setTempApiKey(''); onUpdateUser({ ...user, customApiKey: '' }); }}
+              className="mt-4 text-[10px] font-bold text-yellow-800/50 hover:text-red-600 uppercase transition-colors"
+            >
+              Remove personal key and use Academy key
+            </button>
+          )}
+        </div>
+      )}
 
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-6">
@@ -91,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartQuiz }) =>
             </p>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-900/50 text-red-200 rounded-xl text-sm border border-red-800/50 backdrop-blur-md">
+              <div className="mb-6 p-4 bg-red-900/50 text-red-200 rounded-xl text-sm border border-red-800/50 backdrop-blur-md animate-in slide-in-from-top-2 duration-300">
                 {error}
               </div>
             )}
@@ -150,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartQuiz }) =>
         </div>
       </main>
 
-      <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-12">
          {[
            { label: 'Total Students', value: '124' },
            { label: 'Quizzes Taken', value: '1,452' },

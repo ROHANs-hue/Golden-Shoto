@@ -31,6 +31,11 @@ const App: React.FC = () => {
     setCurrentScreen('dash');
   };
 
+  const handleUpdateUser = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('dojo_user', JSON.stringify(userData));
+  };
+
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('dojo_user');
@@ -89,7 +94,8 @@ const App: React.FC = () => {
             <Dashboard 
               user={user} 
               onLogout={handleLogout} 
-              onStartQuiz={startQuiz} 
+              onStartQuiz={startQuiz}
+              onUpdateUser={handleUpdateUser}
             />
           )}
           {currentScreen === 'quiz' && (

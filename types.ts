@@ -17,6 +17,7 @@ export interface User {
   belt: BeltColor;
   points?: number;
   password?: string;
+  customApiKey?: string;
 }
 
 export interface Question {
@@ -27,6 +28,16 @@ export interface Question {
   correctAnswer: number;
   explanation: string;
   explanationBengali: string;
+}
+
+export interface DojoSettings {
+  model: string;
+  systemInstruction: string;
+  temperature: number;
+  topP?: number;
+  topK?: number;
+  maxOutputTokens?: number;
+  useGoogleSearch?: boolean;
 }
 
 export interface QuizResult {

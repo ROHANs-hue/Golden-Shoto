@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Question, User } from '../types';
+import { Question, User } from '../types.ts';
 
 interface ResultsProps {
   questions: Question[];
